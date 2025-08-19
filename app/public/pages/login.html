@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css">
+    <title>BASIC JWT - LOGIN</title>
+</head>
+<body>
+    <header>
+        <button id="homeBtn"><a href="/" style="text-decoration: none; color: black;">anasayfa</a></button>
+    </header>
+    <main>
+        <style>
+            form{
+                display: flex;
+                flex-direction: column;
+                padding:1%;
+                gap:.5em;
+            }
+            button{
+                margin-top: 1em;
+            }
+        </style>
+        <form id="loginForm">
+            <input type="text" name="username" placeholder="username">
+            <input type="text" name="password" placeholder="password">
+            <button type="submit">gönder</button>
+        </form>
+    </main>
+    <script src="../js/login.js"></script>
+</body>
+</html>

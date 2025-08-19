@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css">
+    <title>BASIC JWT - REGISTER</title>
+</head>
+<body>
+    <header>
+        <button id="homeBtn"><a href="/" style="text-decoration: none; color: black;">anasayfa</a></button>
+    </header>
+    <main>
+        <style>
+            form{
+                display: flex;
+                flex-direction: column;
+                padding:1%;
+                gap:.5em;
+            }
+            button{
+                margin-top: 1em;
+            }
+        </style>
+        <form id="registerForm">
+            <input type="text" name="username" placeholder="username" required>
+            <input type="text" name="email" placeholder="email" required>
+            <input type="password" name="password" placeholder="password" required>
+            <button type="submit">kayıt ol</button>
+        </form>
+    </main>
+    <script src="../js/register.js"></script>
+</body>
+</html>
