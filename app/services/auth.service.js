@@ -1,14 +1,14 @@
-const {getDb} = require('../server')
+const {getDb} = require('../config/db')
 const bcrypt = require('bcrypt')    
 
 exports.createHashword = async(password) => {
     return await bcrypt.hash(password,10)
 }
 
-exports.getUserByEmailAndPassword = async(email, password) => {
+exports.getUserByUsernameAndPassword = async(username, password) => {
     const db = await getDb();
     //userı bul
-    const user = await db.collection('users').findOne({email})
+    const user = await db.collection('users').findOne({username})
     //yoksa null dön
     if(!user) return null;
     //hashedşifreyle girilen şifreyi kıyasla

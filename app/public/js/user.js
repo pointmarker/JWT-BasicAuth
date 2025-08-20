@@ -1,31 +1,35 @@
-window.onload = async function(){
-    const token = localStorage.getItem('access_token');
+window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const res = await fetch("/api/current-user", {
+            method: "GET",
+            credentials: "include"
+        });
 
-    if(token){
-        const pathParts =  window.location.pathname.split("/");
-        const username = pathParts.length > 4 ? pathParts[4] : null;
-        if(username){
-            const res = await fetch(`/auth/user/${username}`,{
-                method: 'GET',
-                headers: {'Content-Type': "application/json", "Authorization" : `Bearer ${token}`},
-            }) 
+        const data = await res.json()
+        console.log("current user:",data.username);
 
-            if(!res.ok) throw new Error('hata') 
+        const el = document.createElement('div')
+        el.innerText= data.username;
+        document.getElementById('div').appendChild(el)
 
-            const data = await res.json();
-            console.log(data)
 
-        }else{
-            alert('geçersiz isim')
-            setTimeout(() => {
-                window.location.href = "/auth/login"
-            },100)
+        document.getElementById('logoutBtn').onclick = async() => {
+            try {
+                const res = await fetch('/auth/logout',{
+                    credentials:'include',
+                    method:'POST',
+                    headers:{'Content-Type':  "application/json"}
+                })
+
+                const data = await res.json()
+                alert(data.message)
+                window.location.href = "/"
+            } catch (error) {
+                console.error("logout err: ",error)
+            }
         }
-    }
-    else{
-        alert('lütfen giriş yapın')
-        setTimeout(() =>{
-            window.location.href ='/auth/login'
-        },100)
-    }
-}
+        } catch (err) {
+        console.error("current-user fetch error:", err);
+        }
+
+  });

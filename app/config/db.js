@@ -2,7 +2,7 @@ const env = require('../environment/environment')
 const {MongoClient, ServerApiVersion} = require('mongodb')
 let client;
 
-exports.mongoStart = async() => {
+async function mongoStart() {
     client = new MongoClient (env.MONGO_URI, {
         serverApi: {
             version:ServerApiVersion.v1,
@@ -26,9 +26,22 @@ exports.mongoStart = async() => {
     }
 }
 
-exports.mongoClose = async() => {
+async function mongoClose(){
     if(client){
         await client.close()
         console.log('mongoDb bağlantısı kesildi')
     }
 }
+
+
+let db;
+async function connectDb(client) {
+    db = client.db('free-cluster')
+}
+
+function getDb(){
+    if(!db) throw new Error('db not initialized');
+    return db
+}
+
+module.exports = {connectDb,getDb, mongoClose,mongoStart}

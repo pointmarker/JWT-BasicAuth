@@ -1,17 +1,22 @@
 const authService = require('../services/auth.service');
 const jwt = require('jsonwebtoken')
 const {ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET} =  require('../environment/environment')
-const {getDb} = require('../server')
+const {getDb} = require('../config/db')
 
-const userModel = require('../models/user.model')
+const {addUser}= require('../models/user.model')
 
 let refreshTokens = {}
 
 exports.user = async(req,res) => {
+    console.log('user controller çalıştı')
     const db = await getDb();
     const username = req.params.username
-    const user = await db.collection('users').findOne({username: username});
+    let user = await db.collection('users').findOne({username: username});
     if(!user) return res.status(404).send({error: "not found"});
+    user = {
+        username: user.username,
+        email: user.email
+    }
     res.send(user)
 }
 
@@ -21,49 +26,74 @@ exports.users = async(req,res) => {
    res.send(users)
 }
 exports.login = async(req,res) => {
-    const {email, password} = req.body;
-    if(email && password){
-        const user = await authService.getUserByEmailAndPassword(email, password)
-
+    console.log('login controller çalıştı')
+    const {username, password} = req.body;
+    if(username && password){
+        const user = await authService.getUserByUsernameAndPassword(username, password)
         if(user){
+            console.log('kullanıcı bulundu')
             const access_token = generateAccesToken(user)
             const refresh_token = generateRefreshToken(user)
             const username = user.username;
 
+            console.log(`tokenlar oluşturuldu: àccess: `,access_token,`\nrefresh: `,refresh_token)
+
             if(!refreshTokens[username]){
                 refreshTokens[username] = []
             }
+
             refreshTokens[username].push(refresh_token)
-            res.status(200).send({
-                "status" : "success",
-                "data":{
-                    username: user.username,
-                    access_token: access_token,
-                    refresh_token: refresh_token
-                }
+
+            res.cookie('access_token',access_token,{
+                httpOnly:true,
+                secure:false
             })
+
+            res.cookie('refresh_token',refresh_token,{
+                httpOnly: true,
+                secure:false
+            })
+
+            console.log('cookieler oluşturuldu')
+            console.log('logincontrollerdaki işlemler bitti')
+            res.status(200).send({username: user.username})
         }else{
             res.status(404).send('user not found')
         }
     }else{
         res.status(400).send('email and password required')
     }
+}
 
+exports.currentUser = (req,res) => {
+    console.log('currentuser controller çalıştı')
+    res.status(200).send(req.payload)
 }
 exports.token = (req,res) => {
-    const {token: refreshToken, username} = req.body
+    const refreshToken = req.cookies.refresh_token;
+    
     if(refreshToken == null) {return res.status(401).send('unauth')}
-    else{
+    try {
+        //kullanıcı bilgisini jwt ile al
+        const payload = jwt.verify(token,REFRESH_TOKEN_SECRET)
+        const username = payload.username;
+
         if(!refreshTokens[username] ||!refreshTokens[username].includes(refreshToken)){
             return res.status(403).send('forbidden')
         }
-        jwt.verify(refreshToken,REFRESH_TOKEN_SECRET, (err,payload) => {
-            if(err) return res.status(403).send('forbidden');
-            const accessToken = generateAccesToken({username: payload.username})
-            res.status(200).json({access_token: accessToken})
-        })
-    }
 
+        const accessToken = generateAccesToken({username})
+        
+        res.cookie('access_token',accessToken,{
+            httpOnly:true,
+            secure:false
+        })
+
+        res.status(200).json({message: "success"})
+    } catch (error) {
+        console.error(error)
+    }
+    
 }
 exports.register = async(req,res) => {
     const db = await getDb();
@@ -77,7 +107,7 @@ exports.register = async(req,res) => {
 
     if(!userMail && !userUsername){
         const passwordHash = await authService.createHashword(password)
-        const user = await userModel.addUser(email,username,passwordHash)
+        const user = await addUser(email,username,passwordHash)
 
         res.status(201).send({
             access_token: generateAccesToken(user),
@@ -92,11 +122,32 @@ exports.register = async(req,res) => {
     }
 }
 exports.logout = (req,res) => {
-    const {token, username} = req.body
-    if(!token || !username) return res.status(401).send('unauth');
-    if(!refreshTokens[username] || !refreshTokens[username].includes(token)) return res.status(403).send('forbidden');
-    refreshTokens[username] = refreshTokens[username].filter(t => t !== token)
-    res.status(200).send({status: "success", message: "logged out"})
+    //tokenı al
+    const token = req.cookies.refresh_token
+
+    //token ya da kullanıcı adı yoksa hata dön
+    if(!token) return res.status(401).send('unauth');
+
+    try {
+        //kullanıcı bilgisini jwt ile al
+        const payload = jwt.verify(token,REFRESH_TOKEN_SECRET)
+        const username = payload.username;
+
+        //tokenı ramde yoksa hata dön
+        if(!refreshTokens[username] || !refreshTokens[username].includes(token)) return res.status(403).send('forbidden');
+        //tokenı ramden sil
+        refreshTokens[username] = refreshTokens[username].filter(t => t !== token)
+
+        //cookieleri sil
+        res.clearCookie('access_token')
+        res.clearCookie('refresh_token')
+
+        //cevap dönd
+        res.status(200).send({status: "success", message: "logged out"})
+    } catch (error) {
+        console.error(err);
+        return res.status(403).send('invalid token');
+    }
 }
 
 

@@ -1,29 +1,30 @@
 const form = document.getElementById('loginForm')
 
 form.addEventListener('submit',async(e) => {
+    e.preventDefault();
     const fd = new FormData(form);
 
     const payload = {
         username: fd.get('username'),
         password: fd.get('password')
     }
+    try {
+        const res = await fetch('/auth/login',{
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload),
+            credentials:'include'
+        })
+    
+        if(!res.ok){
+            throw new Error('login res çalışmadı')
+        }
 
-    const res = await fetch('/auth/login',{
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: payload
-    })
-
-    const data = await res.json();
-
-    localStorage.setItem('access_token', data.access_token)
-    localStorage.setItem('refresh_token', data.refresh_token)
-
-    window.location.href = `/auth/user/${data.username}`
-
-    if(res.ok){
-
-    }else{
-        throw new Error("login hatası")
+        const data = await res.json();
+        
+        window.location.href = `/user/${data.username}`
+        
+    } catch (error) {
+        console.error(error)
     }
 })

@@ -1,22 +1,15 @@
-const mongoose = require('mongoose')
+const {getDb} = require('../config/db')
 
-const userSchema = new mongoose.Schema({
-    email : {type: String, required:true, unique: true},
-    username: {type:String,required:true, unique: true},
-    passwordHash: {type: String},
-    createdAt: {type:Date, default: Date.now}
-})
-
-
-userSchema.statics.addUser = async function(email, username, passwordHash){
-    const newUser = new this({
+async function addUser(email,username,passwordHash) {
+    const db = await getDb()
+    const res = await db.collection('users').insertOne({
         email,
         username,
-        passwordHash
-    })
+        passwordHash,
+        createdAt: new Date()
+    });
 
-    return newUser.save()
+    return res;
 }
-const userModel = mongoose.model('user.model',userSchema,"users")
 
-module.exports = {userModel};
+module.exports = {addUser};

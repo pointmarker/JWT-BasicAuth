@@ -23,7 +23,7 @@ form.addEventListener('submit',async (e) => {
         localStorage.setItem('refresh_token', data.refresh_token)
 
         if(!res.ok) throw new Error('sunucu hatası');
-        window.location.href = '/auth/login'
+        window.location.href = '/login'
 
     } catch (error) {
         console.error(error)
