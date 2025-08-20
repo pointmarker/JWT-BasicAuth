@@ -12,6 +12,6 @@
 
 ### variables. also node_modules should download with
 
-#### bcrypt, cookie-parser,mongodb, jsonwebtoken
+#### bcrypt, cookie-parser, mongodb, jsonwebtoken
 
 ### packages.
